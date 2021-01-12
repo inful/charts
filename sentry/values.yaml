@@ -256,6 +256,7 @@ system:
   adminEmail: ""
   ## This should only be used if you’re installing Sentry behind your company’s firewall.
   public: false
+  sslproxy: false
   ## This will generate one for you (it's must be given upon updates)
   #secretKey: "xx"
 

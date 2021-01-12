@@ -281,11 +281,17 @@ data:
     # If you're using a reverse SSL proxy, you should enable the X-Forwarded-Proto
     # header and enable the settings below
 
+    {{- if .Values.system.sslproxy }}
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+    {{- else }}
     # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     # SESSION_COOKIE_SECURE = True
     # CSRF_COOKIE_SECURE = True
     # SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
-
+    {{- end }}
     # End of SSL/TLS settings
 
     ############
