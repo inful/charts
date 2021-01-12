@@ -199,7 +199,6 @@ snuba:
   migrateJob:
     env: []
 
-
 hooks:
   enabled: true
   removeOnSuccess: true
@@ -233,6 +232,7 @@ system:
   adminEmail: ""
   ## This should only be used if you’re installing Sentry behind your company’s firewall.
   public: false
+  ## Set this to true if you run sentry behind a terminating ssl proxy
   sslproxy: false
   ## This will generate one for you (it's must be given upon updates)
   #secretKey: "xx"
@@ -364,7 +364,8 @@ filestore:
       ## different nodes.
       persistentWorkers: false
 
-  gcs: {}
+  gcs:
+    {}
     ## Point this at a pre-configured secret containing a service account. The resulting
     ## secret will be mounted at /var/run/secrets/google
     # secretName:
@@ -403,7 +404,7 @@ clickhouse:
       dataPersistentVolume:
         enabled: true
         accessModes:
-        - "ReadWriteOnce"
+          - "ReadWriteOnce"
         storage: "30Gi"
 
 ## This value is only used when clickhouse.enabled is set to false
@@ -507,16 +508,16 @@ rabbitmq:
 
   definitions:
     policies: |-
-     {
-       "name": "ha-all",
-       "pattern": "^((?!celeryev.*).)*$",
-       "vhost": "/",
-       "definition": {
-         "ha-mode": "all",
-         "ha-sync-mode": "automatic",
-         "ha-sync-batch-size": 1
-       }
-     }
+      {
+        "name": "ha-all",
+        "pattern": "^((?!celeryev.*).)*$",
+        "vhost": "/",
+        "definition": {
+          "ha-mode": "all",
+          "ha-sync-mode": "automatic",
+          "ha-sync-batch-size": 1
+        }
+      }
 
 ## Prometheus Exporter / Metrics
 ##
