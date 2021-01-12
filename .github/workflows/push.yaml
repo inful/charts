@@ -47,7 +47,7 @@ jobs:
       - name: Create index file
         uses: yeouchien/helm3-action@f3a7c239c5c60777210c8e631839edf5dd3fa29c
         env:
-          url: https://${{ GITHUB_ACTOR }}.github.io/charts
+          url: https://${{ github.actor }}.github.io/charts
         with:
           command: repo index --url $url ./gh-pages/charts
 
