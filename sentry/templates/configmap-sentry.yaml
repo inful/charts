@@ -279,19 +279,21 @@ data:
     ###########
 
     # If you're using a reverse SSL proxy, you should enable the X-Forwarded-Proto
-    # header and enable the settings below
+    # header and enable the settings below (cookie)
 
     {{- if .Values.system.sslproxy }}
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+    CSRF_TRUSTED_ORIGINS = [{{ .Values.system.url | quote }}]
     {{- else }}
     # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     # SESSION_COOKIE_SECURE = True
     # CSRF_COOKIE_SECURE = True
     # SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
     {{- end }}
+
     # End of SSL/TLS settings
 
     ############
