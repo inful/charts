@@ -72,6 +72,7 @@ sentry:
 
   features:
     orgSubdomains: false
+    vstsLimitedScopes: true
 
   worker:
     replicas: 3
@@ -228,6 +229,7 @@ hooks:
         memory: 1Gi
 
 system:
+  ## be sure to include the scheme on the url, for example: "https://sentry.example.com"
   url: ""
   adminEmail: ""
   ## This should only be used if you’re installing Sentry behind your company’s firewall.
@@ -293,6 +295,11 @@ github: {} # https://github.com/settings/apps (Create a Github App)
 #   clientSecret: "xxxxx"
 #   privateKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIEpA" !!!! Don't forget a trailing \n
 #   webhookSecret:  "xxxxx`"
+
+google: {} # https://developers.google.com/identity/sign-in/web/server-side-flow#step_1_create_a_client_id_and_client_secret
+# google:
+#   clientId:
+#   clientSecret:
 
 slack: {}
 # slack:
@@ -399,6 +406,9 @@ clickhouse:
     configmap:
       remote_servers:
         internal_replication: true
+        replica:
+          backup:
+            enabled: false
     persistentVolumeClaim:
       enabled: true
       dataPersistentVolume:
@@ -473,9 +483,10 @@ postgresql:
   postgresqlDatabase: sentry
   replication:
     enabled: false
-    slaveReplicas: 2
+    readReplicas: 2
     synchronousCommit: "on"
     numSynchronousReplicas: 1
+    applicationName: sentry
 
 ## This value is only used when postgresql.enabled is set to false
 ##
@@ -492,9 +503,10 @@ rabbitmq:
   enabled: true
   forceBoot: true
   replicaCount: 3
-  rabbitmqErlangCookie: pHgpy3Q6adTskzAT6bLHCFqFTF7lMxhA
-  rabbitmqUsername: guest
-  rabbitmqPassword: guest
+  auth:
+    erlangCookie: pHgpy3Q6adTskzAT6bLHCFqFTF7lMxhA
+    username: guest
+    password: guest
   nameOverride: ""
 
   podDisruptionBudget:

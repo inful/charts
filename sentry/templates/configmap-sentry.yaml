@@ -30,6 +30,9 @@ data:
       url: "http://{{ template "sentry.fullname" . }}-symbolicator:{{ template "symbolicator.port" }}"
     {{- end }}
 
+    ##########
+    # Github #
+    ##########
     {{- if .Values.github.appId }}
     github-app.id: {{ .Values.github.appId }}
     {{ end }}
@@ -50,6 +53,17 @@ data:
     github-app.client-secret: {{ .Values.github.clientSecret | quote }}
     {{ end }}
 
+    ##########
+    # Google #
+    ##########
+    {{- if .Values.google.clientId }}
+    auth-google.client-id: {{ .Values.google.clientId | quote }}
+    auth-google.client-secret: {{ .Values.google.clientSecret | quote }}
+    {{ end }}
+
+    #########
+    # Slack #
+    #########
     {{- if .Values.slack.clientId }}
     slack.client-id: {{ .Values.slack.clientId | quote }}
     slack.client-secret: {{ .Values.slack.clientSecret | quote }}
@@ -62,9 +76,9 @@ data:
     {{ end }}
     {{ end }}
 
-    ################
-    #    Redis     #
-    ################
+    #########
+    # Redis #
+    #########
     redis.clusters:
       default:
         hosts:
@@ -160,7 +174,7 @@ data:
     # on a Python framework called Celery to manage queues.
 
     {{- if or (.Values.rabbitmq.enabled) (.Values.rabbitmq.host) }}
-    BROKER_URL = os.environ.get("BROKER_URL", "amqp://{{ .Values.rabbitmq.rabbitmqUsername }}:{{ .Values.rabbitmq.rabbitmqPassword }}@{{ template "sentry.rabbitmq.host" . }}:5672//")
+    BROKER_URL = os.environ.get("BROKER_URL", "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ template "sentry.rabbitmq.host" . }}:5672//")
     {{- else if $redisPass }}
     BROKER_URL = os.environ.get("BROKER_URL", "redis://:{{ $redisPass }}@{{ $redisHost }}:{{ $redisPort }}/0")
     {{- else }}
@@ -309,6 +323,7 @@ data:
                 {{- if .Values.sentry.features.orgSubdomains }}
                 "organizations:org-subdomains",
                 {{ end -}}
+
                 "organizations:advanced-search",
                 "organizations:android-mappings",
                 "organizations:api-keys",
@@ -334,7 +349,11 @@ data:
                 "organizations:integrations-chat-unfurl",
                 "organizations:integrations-incident-management",
                 "organizations:integrations-ticket-rules",
+
+                {{- if .Values.sentry.features.vstsLimitedScopes }}
                 "organizations:integrations-vsts-limited-scopes",
+                {{ end -}}
+
                 "organizations:integrations-stacktrace-link",
                 "organizations:internal-catchall",
                 "organizations:invite-members",

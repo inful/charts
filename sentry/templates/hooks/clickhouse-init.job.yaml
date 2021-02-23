@@ -31,7 +31,9 @@ spec:
       restartPolicy: Never
       {{- if .Values.clickhouse.clickhouse.imagePullSecrets }}
       imagePullSecrets:
-{{ toYaml .Values.clickhouse.clickhouse.imagePullSecrets | indent 8 }}
+      {{- range .Values.clickhouse.clickhouse.imagePullSecrets }}
+        - name: {{ . | quote }}
+      {{- end }}
       {{- end }}
       containers:
       - name: clickhouse-init
@@ -41,6 +43,8 @@ spec:
           - -ec
           - >-
             {{- if .Values.clickhouse.enabled }}
+            echo "clickhouse-init started"
+            
             for tbl in {{ $tables }}; do
               for ((i=0;i<{{ .Values.clickhouse.clickhouse.replicas }};i++)); do
                 clickhouse-client --database=default --host={{ $clickhouseHost }}-$i.{{ $clickhouseHost }}-headless --port={{ $clickhousePort }} --query="{{ $dropQuery }}";
@@ -51,10 +55,16 @@ spec:
                 {{- end }}
               done
             done
+            
+            echo "clickhouse-init finished"
             {{- else }}
+            echo "clickhouse-init started"
+            
             for tbl in {{ $tables }}; do
               clickhouse-client --database=default --host={{ $clickhouseHost }} --port={{ $clickhousePort }} --query="{{ $dropQuery }}";
               clickhouse-client --database=default --host={{ $clickhouseHost }} --port={{ $clickhousePort }} --query="{{ $createQuery }}";
             done
+            
+            echo "clickhouse-init finished"
             {{- end }}
 {{- end }}
