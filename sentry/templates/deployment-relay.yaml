@@ -7,8 +7,12 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
+    app.kubernetes.io/managed-by: "Helm"
   {{- if .Values.asHook }}
+  {{- /* Add the Helm annotations so that deployment after asHook from true to false works */}}
   annotations:
+    meta.helm.sh/release-name: "{{ .Release.Name }}"
+    meta.helm.sh/release-namespace: "{{ .Release.Namespace }}"
     "helm.sh/hook": "post-install,post-upgrade"
     "helm.sh/hook-weight": "25"
   {{- end }}
@@ -111,6 +115,9 @@ spec:
           timeoutSeconds: 2
         resources:
 {{ toYaml .Values.relay.resources | indent 12 }}
+{{- if .Values.relay.sidecars }}
+{{ toYaml .Values.relay.sidecars | indent 6 }}
+{{- end }}
       volumes:
       - name: config
         configMap:
@@ -118,6 +125,9 @@ spec:
           defaultMode: 0644
       - name: credentials
         emptyDir: {}
+{{- if .Values.relay.volumes }}
+{{ toYaml .Values.relay.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.relay.priorityClassName }}
       priorityClassName: "{{ .Values.relay.priorityClassName }}"
       {{- end }}

@@ -7,8 +7,12 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
+    app.kubernetes.io/managed-by: "Helm"
   {{- if .Values.asHook }}
+  {{- /* Add the Helm annotations so that deployment after asHook from true to false works */}}
   annotations:
+    meta.helm.sh/release-name: "{{ .Release.Name }}"
+    meta.helm.sh/release-namespace: "{{ .Release.Namespace }}"
     "helm.sh/hook": "post-install,post-upgrade"
     "helm.sh/hook-weight": "10"
   {{- end }}
@@ -83,6 +87,9 @@ spec:
         {{ end }}
         resources:
 {{ toYaml .Values.sentry.postProcessForward.resources | indent 12 }}
+{{- if .Values.sentry.postProcessForward.sidecars }}
+{{ toYaml .Values.sentry.postProcessForward.sidecars | indent 6 }}
+{{- end }}
       volumes:
       - name: config
         configMap:
@@ -99,6 +106,9 @@ spec:
         secret:
           secretName: {{ .Values.filestore.gcs.secretName }}
       {{ end }}
+{{- if .Values.sentry.postProcessForward.volumes }}
+{{ toYaml .Values.sentry.postProcessForward.volumes | indent 6 }}
+{{- end }}
       {{- if .Values.sentry.postProcessForward.priorityClassName }}
       priorityClassName: "{{ .Values.sentry.postProcessForward.priorityClassName }}"
       {{- end }}
