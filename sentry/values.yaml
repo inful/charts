@@ -29,7 +29,7 @@ images:
     imagePullSecrets: []
   symbolicator:
     # repository: getsentry/symbolicator
-    tag: 0.3.3
+    tag: 0.2.0
     # pullPolicy: IfNotPresent
     imagePullSecrets: []
 
@@ -49,8 +49,6 @@ relay:
     minReplicas: 2
     maxReplicas: 5
     targetCPUUtilizationPercentage: 50
-  sidecars: [ ]
-  volumes: [ ]
 
 sentry:
   singleOrganization: true
@@ -65,18 +63,12 @@ sentry:
     nodeSelector: {}
     # tolerations: []
     # podLabels: []
-    # Mount and use custom CA
-    # customCA:
-    #   secretName: custom-ca
-    #   item: ca.crt
 
     autoscaling:
       enabled: false
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 50
-    sidecars: [ ]
-    volumes: [ ]
 
   features:
     orgSubdomains: false
@@ -99,8 +91,6 @@ sentry:
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 50
-    sidecars: [ ]
-    volumes: [ ]
 
   ingestConsumer:
     replicas: 1
@@ -119,8 +109,7 @@ sentry:
       minReplicas: 1
       maxReplicas: 3
       targetCPUUtilizationPercentage: 50
-    sidecars: [ ]
-    volumes: [ ]
+
   cron:
     replicas: 1
     env: []
@@ -129,8 +118,6 @@ sentry:
     nodeSelector: {}
     # tolerations: []
     # podLabels: []
-    sidecars: [ ]
-    volumes: [ ]
   postProcessForward:
     replicas: 1
     env: []
@@ -140,14 +127,10 @@ sentry:
     # tolerations: []
     # podLabels: []
     # commitBatchSize: 1
-    sidecars: [ ]
-    volumes: [ ]
   cleanup:
     enabled: true
     schedule: "0 0 * * *"
     days: 90
-    sidecars: []
-    volumes: []
 
 snuba:
   api:
@@ -165,8 +148,6 @@ snuba:
       minReplicas: 2
       maxReplicas: 5
       targetCPUUtilizationPercentage: 50
-    sidecars: [ ]
-    volumes: [ ]
 
   consumer:
     replicas: 1
@@ -219,7 +200,6 @@ snuba:
   migrateJob:
     env: []
 
-
 hooks:
   enabled: true
   removeOnSuccess: true
@@ -239,8 +219,6 @@ hooks:
       requests:
         cpu: 300m
         memory: 2048Mi
-    sidecars: [ ]
-    volumes: [ ]
   snubaInit:
     resources:
       limits:
@@ -256,6 +234,7 @@ system:
   adminEmail: ""
   ## This should only be used if you’re installing Sentry behind your company’s firewall.
   public: false
+  ## Set this to true if you run sentry behind a terminating ssl proxy
   sslproxy: false
   ## This will generate one for you (it's must be given upon updates)
   #secretKey: "xx"
@@ -326,8 +305,13 @@ slack: {}
 # slack:
 #   clientId:
 #   clientSecret:
+#   verificationToken:
 #   signingSecret:
+#   # channels.* of Slack API is deprecated.
+#   If legacyApp is set to `true`, then define the verificationToken property
+#   If legacyApp is set to `false`, then define the signingSecret property
 #   Reference -> https://develop.sentry.dev/integrations/slack/
+#   legacyApp:
 
 nginx:
   enabled: true
@@ -387,7 +371,8 @@ filestore:
       ## different nodes.
       persistentWorkers: false
 
-  gcs: {}
+  gcs:
+    {}
     ## Point this at a pre-configured secret containing a service account. The resulting
     ## secret will be mounted at /var/run/secrets/google
     # secretName:
@@ -429,7 +414,7 @@ clickhouse:
       dataPersistentVolume:
         enabled: true
         accessModes:
-        - "ReadWriteOnce"
+          - "ReadWriteOnce"
         storage: "30Gi"
 
 ## This value is only used when clickhouse.enabled is set to false
@@ -516,9 +501,7 @@ externalPostgresql:
 rabbitmq:
   ## If disabled, Redis will be used instead as the broker.
   enabled: true
-  clustering:
-    forceBoot: true
-    rebalance: true
+  forceBoot: true
   replicaCount: 3
   auth:
     erlangCookie: pHgpy3Q6adTskzAT6bLHCFqFTF7lMxhA
@@ -526,58 +509,27 @@ rabbitmq:
     password: guest
   nameOverride: ""
 
-  pdb:
-    create: true
-  persistence:
+  podDisruptionBudget:
+    minAvailable: 1
+
+  persistentVolume:
     enabled: true
   resources: {}
-  memoryHighWatermark: {}
-    # enabled: true
-    # type: relative
-    # value: 0.4
+  # rabbitmqMemoryHighWatermark: 600MB
+  # rabbitmqMemoryHighWatermarkType: absolute
 
-  extraSecrets:
-    load-definition:
-      load_definition.json: |
-        {
-          "users": [
-            {
-              "name": "{{ .Values.auth.username }}",
-              "password": "{{ .Values.auth.password }}",
-              "tags": "administrator"
-            }
-          ],
-          "permissions": [{
-            "user": "{{ .Values.auth.username }}",
-            "vhost": "/",
-            "configure": ".*",
-            "write": ".*",
-            "read": ".*"
-          }],
-          "policies": [
-            {
-              "name": "ha-all",
-              "pattern": ".*",
-              "vhost": "/",
-              "definition": {
-                "ha-mode": "all",
-                "ha-sync-mode": "automatic",
-                "ha-sync-batch-size": 1
-              }
-            }
-          ],
-          "vhosts": [
-            {
-              "name": "/"
-            }
-          ]
+  definitions:
+    policies: |-
+      {
+        "name": "ha-all",
+        "pattern": "^((?!celeryev.*).)*$",
+        "vhost": "/",
+        "definition": {
+          "ha-mode": "all",
+          "ha-sync-mode": "automatic",
+          "ha-sync-batch-size": 1
         }
-  loadDefinition:
-    enabled: true
-    existingSecret: load-definition
-  extraConfiguration: |
-    load_definitions = /app/load_definition.json
-
+      }
 
 ## Prometheus Exporter / Metrics
 ##
